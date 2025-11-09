@@ -39,7 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'users',
     'shopping',
-    'shopping_data'
+    'shopping_data',
+    'rest_framework.authtoken'
 ]
 
 MIDDLEWARE = [
