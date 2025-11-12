@@ -1,7 +1,7 @@
 from django.db import models
 
 class Brand(models.Model):
-    name = models.CharField(max_length=144, null=False, blank=False, db_column='BRAND_NAME')
+    name = models.CharField(max_length=144, null=False, blank=False, db_column='BRAND_NAME', unique=True)
     desc = models.TextField(null=False, blank=False, db_column='BRAND_DESC')
     is_active = models.BooleanField(db_default=True, db_column='IS_ACTIVE')
     is_deleted = models.BooleanField(db_default=False, db_column='IS_DELETED')
