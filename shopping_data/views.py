@@ -131,3 +131,62 @@ class BrandView(APIView):
                 "status": "error",
                 "msg": str(ex)
             }, status=500)
+            
+    
+    def patch(self, request, brand_id=None):
+        try:
+            brand_update_data = request.data
+            
+            if not brand_id or not brand_update_data:
+                return Response({
+                    "status": "error",
+                    "msg": "Brand ID &/or Brand Update data required for Brand Record Update."
+                }, status=400)
+            
+            brand_obj = Brand.objects.get(id=brand_id, is_active=True, is_deleted=False)
+            
+            brand_de_seri = BrandSerializer(brand_obj, brand_update_data, partial=True)
+            
+            if brand_de_seri.is_valid():
+                brand_de_seri.save()
+                return Response({
+                    "status": "Success",
+                    "msg": f"Brand record updated with ID {brand_id}"
+                }, status=200)
+                
+            return Response({
+                "status": "error",
+                "msg": f"Unknown Error occured while updating Brand Data with ID {brand_id}"
+            }, status=400)
+                
+        except Brand.DoesNotExist as ex:
+            return Response({
+                "status": "error",
+                "msg": f"Brand record not found for ID {brand_id}"
+            }, status=400)
+            
+        except Brand.MultipleObjectsReturned as ex:
+            return Response({
+                "status": "error",
+                "msg": f"Multiple Brand records found with ID {brand_id}"
+            }, status=400)
+        
+        except Exception as ex:
+            return Response({
+                "status": "error",
+                "msg": str(ex)
+            }, status=500)
+            
+            
+class CategoryView(APIView):
+    authentication_classes = []
+    permission_classes = []
+    
+    def get(self, request, category_id=None):
+        try:
+            pass
+        except Exception as ex:
+            return Response({
+                "status": "error",
+                "msg": str(ex)
+            }, status=500)
