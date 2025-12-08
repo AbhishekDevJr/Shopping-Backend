@@ -5,7 +5,8 @@ from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from rest_framework.serializers import Serializer
 from .models.Brand import Brand
-from .serializers import BrandSerializer
+from .models.Category import Category
+from .serializers import BrandSerializer, CategorySerializer
 
 # Create your views here.
 
@@ -52,8 +53,7 @@ class BrandView(APIView):
                 "status": "error",
                 "msg": str(ex)
             }, status=500)
-            
-            
+
     def post(self, request):
         try:
             brand_data = request.data
@@ -95,7 +95,7 @@ class BrandView(APIView):
                 "status": "error",
                 "msg": str(ex)
             }, status=500)
-            
+
     def delete(self, request, brand_id=None):
         try:
             if not brand_id:
@@ -131,8 +131,7 @@ class BrandView(APIView):
                 "status": "error",
                 "msg": str(ex)
             }, status=500)
-            
-    
+
     def patch(self, request, brand_id=None):
         try:
             brand_update_data = request.data
@@ -176,13 +175,128 @@ class BrandView(APIView):
                 "status": "error",
                 "msg": str(ex)
             }, status=500)
-            
-            
+
+
 class CategoryView(APIView):
     authentication_classes = []
     permission_classes = []
     
     def get(self, request, category_id=None):
+        try:
+            if not category_id:
+                category_qs = Category.objects.filter(is_active=True, is_deleted=False)
+                serialized_data = CategorySerializer(category_qs, many=True)
+                
+                return Response({
+                    "status": "success",
+                    "msg": "Category List data retrieved successfully.",
+                    "data": serialized_data.data
+                }, status=200)
+                
+            category_obj = Category.objects.get(is_active=True, is_deleted=False, id=category_id)
+            serialized_data = CategorySerializer(category_obj, many=False)
+            
+            return Response({
+                "status": "success",
+                "msg": f"Category Detail data retrieved successfully for ID {category_id}",
+                "data": serialized_data.data
+            }, status=200)
+            
+        except Category.DoesNotExist as e:
+            return Response({
+                "status": "error",
+                "msg": f"Category Data not found for ID {category_id}",
+                "error_msg": f"{str(e)}"
+            }, status=400)
+            
+        except Category.MultipleObjectsReturned as e:
+            return Response({
+                "status": "error",
+                "msg": f"Multiple Category Data found for ID {category_id}",
+                "error_msg": f"{str(e)}"
+            }, status=400)
+        
+        except Exception as ex:
+            return Response({
+                "status": "error",
+                "msg": str(ex)
+            }, status=500)
+            
+    def post(self, request):
+        try:
+            if not request.data:
+                return Response({
+                    "status": "error",
+                    "msg": "Invalid Request Payload."
+                }, status=400)
+                
+            category_name = request.data.get("name")
+            category_desc = request.data.get("desc")
+            
+            if not category_name or not category_desc:
+                return Response({
+                    "status": "error",
+                    "msg": "Invalid Request Payload"
+                }, status=400)
+                
+            category_obj = {
+                "name": category_name,
+                "desc": category_desc,
+                "is_active": True,
+                "is_deleted": False
+            }
+            
+            deserialized_data = CategorySerializer(data=category_obj, many=False)
+            
+            if deserialized_data.is_valid():
+                data = deserialized_data.save()
+                
+                return Response({
+                    "status": "success",
+                    "msg": f"Category record created with Name {data.name}"
+                }, status=201)
+                
+            return Response({
+                "status": "error",
+                "msg": deserialized_data.errors
+            }, status=400)
+            
+        except Exception as ex:
+            return Response({
+                "status": "error",
+                "msg": str(ex)
+            }, status=500)
+            
+    def patch(self, request, category_id=None):
+        try:
+            if not category_id or not request.data:
+                return Response({
+                    "status": "error",
+                    "msg": "Category ID & Category Data is required to Update."
+                }, status=400)
+                
+            category_obj = Category.objects.get(is_active=True, is_deleted=False, id=category_id)
+            deserialized_data = CategorySerializer(category_obj, request.data, partial=True)
+            
+            if deserialized_data.is_valid():
+                data = deserialized_data.save()
+                return Response({
+                    "status": "success",
+                    "msg": f"Category Data updated for Name {data.name}"
+                }, status=200)
+                
+            return Response({
+                "status": "error",
+                "msg": deserialized_data.errors
+            }, status=400)
+                
+        except Exception as ex:
+            return Response({
+                "status": "error",
+                "msg": str(ex)
+            }, status=500)
+            
+    def delete(self, request, category_id=None):
         try:
             pass
         except Exception as ex:
