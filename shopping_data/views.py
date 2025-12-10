@@ -54,7 +54,7 @@ class BrandView(APIView):
                 "msg": str(ex)
             }, status=500)
 
-    def post(self, request):
+    def post(self, request, category_id):
         try:
             brand_data = request.data
             
@@ -222,7 +222,7 @@ class CategoryView(APIView):
                 "msg": str(ex)
             }, status=500)
             
-    def post(self, request):
+    def post(self, request, category_id):
         try:
             if not request.data:
                 return Response({
@@ -298,9 +298,52 @@ class CategoryView(APIView):
             
     def delete(self, request, category_id=None):
         try:
-            pass
+            if not category_id:
+                return Response({
+                    "status": "error",
+                    "msg": "Category ID is required to delete Category Data."
+                }, status=400)
+                
+            category_obj = Category.objects.get(id=category_id, is_active=True, is_deleted=False)
+            category_obj.is_active = False
+            category_obj.is_deleted = True
+            category_obj.save()
+            
+            return Response({
+                "status": "success",
+                "msg": f"Successfully deleted Category record with ID {category_id}."
+            }, status=200)
+            
+        except Category.DoesNotExist as ex:
+            return Response({
+                "status": "error",
+                "msg": str(ex)
+            }, status=400)
+        
+        except Category.MultipleObjectsReturned as ex:
+            return Response({
+                "status": "error",
+                "msg": str(ex)
+            }, status=400)
+            
         except Exception as ex:
             return Response({
                 "status": "error",
                 "msg": str(ex)
             }, status=500)
+            
+            
+class ProductView(APIView):
+    authentication_classes = []
+    permission_classes = []
+    
+    def get(self, request, product_id):
+        try:
+            if not product_id:
+                pass
+        
+        except Exception as ex:
+            return Response({
+                "status": "error",
+                "msg": str(ex)
+            }, status=400)
