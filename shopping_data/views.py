@@ -6,7 +6,8 @@ from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from rest_framework.serializers import Serializer
 from .models.Brand import Brand
 from .models.Category import Category
-from .serializers import BrandSerializer, CategorySerializer
+from .models.Products import Products
+from .serializers import BrandSerializer, CategorySerializer, ProductsViewSerializer
 
 # Create your views here.
 
@@ -340,10 +341,40 @@ class ProductView(APIView):
     def get(self, request, product_id):
         try:
             if not product_id:
-                pass
+                product_qs = Products.objects.filter(is_active=True, is_deleted=False)
+                product_serialized = ProductsViewSerializer(product_qs, many=True)
+                
+                return Response({
+                    "status": "success",
+                    "msg": "Successfully retrieved Product List.",
+                    "data": product_serialized.data
+                }, status=200)
+                
+            product_obj = Products.objects.get(is_active=True, is_deleted=False, id=product_id)
+            product_obj_serialized = ProductsViewSerializer(product_obj, many=False)
+            
+            return Response({
+                "status": "success",
+                "msg": f"Successfully retrieved Product data for product ID: {product_id}",
+                "data": product_obj_serialized.data
+            }, status=200)
+            
+        except Products.DoesNotExist as ex:
+            return Response({
+                "status": "error",
+                "msg": str(ex)
+            }, status=400)
+            
+        except Products.MultipleObjectsReturned as ex:
+            return Response({
+                "status": "error",
+                "msg": str(ex)
+            }, status=400)
         
         except Exception as ex:
             return Response({
                 "status": "error",
                 "msg": str(ex)
             }, status=400)
+            
+    
