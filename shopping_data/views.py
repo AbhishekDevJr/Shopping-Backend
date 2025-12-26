@@ -7,7 +7,7 @@ from rest_framework.serializers import Serializer
 from .models.Brand import Brand
 from .models.Category import Category
 from .models.Products import Products
-from .serializers import BrandSerializer, CategorySerializer, ProductsViewSerializer
+from .serializers import BrandSerializer, CategorySerializer, ProductsViewSerializer, ProductsPostSerializer
 
 # Create your views here.
 
@@ -377,4 +377,31 @@ class ProductView(APIView):
                 "msg": str(ex)
             }, status=400)
             
-    
+    def post(self, request, product_id):
+        try:
+            if not request.data or not isinstance(request.data, dict):
+                return Response({
+                    "status": "error",
+                    "msg": "Bad Request Payload."
+                }, status=400)
+                
+            product_deserialized = ProductsPostSerializer(data=request.data, many=False)
+            
+            if product_deserialized.is_valid():
+                product_saved_obj = product_deserialized.save()
+                
+                return Response({
+                    "status": "success",
+                    "msg": f"Product Record saved with name: {product_saved_obj.name}"
+                }, status=201)
+                
+            return Response({
+                "status": "error",
+                "msg": product_deserialized.error_messages
+            }, status=400)
+                
+        except Exception as ex:
+            return Response({
+                "status": "error",
+                "msg": str(ex)
+            }, status=400)
