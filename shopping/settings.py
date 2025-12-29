@@ -40,7 +40,8 @@ INSTALLED_APPS = [
     'users',
     'shopping',
     'shopping_data',
-    'rest_framework.authtoken'
+    'rest_framework.authtoken',
+    'reddit'
 ]
 
 MIDDLEWARE = [

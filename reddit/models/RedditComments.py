@@ -1,9 +1,11 @@
 from django.db import models
 from .RedditPosts import RedditPosts
+from ..constants import CATEGORY_CHOICES
 
 class RedditComments(models.Model):
     title = models.CharField(null=False, blank=False, db_column="POST_COMMENT")
     body = models.TextField(null=False, blank=False, db_column="COMMENT_BODY")
+    category = models.TextField(null=False, blank=False, choices=CATEGORY_CHOICES, db_column="COMMENT_CATEGORY")
     reddit_post = models.ForeignKey(RedditPosts, related_name="post_comments", on_delete=models.CASCADE, db_column="REDDIT_POST_FK")
     sub_reddit_name = models.CharField(null=False, blank=False, db_column="SUB_REDDIT_NAME")
     upvote_ratio = models.FloatField(null=False, blank=False, db_column="COMMENT_UPVOTE_SCORE")
