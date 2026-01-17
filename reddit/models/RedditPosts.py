@@ -8,7 +8,7 @@ class RedditPosts(models.Model):
     sub_reddit_name = models.CharField(null=False, blank=False, db_column="SUB_REDDIT_NAME")
     upvote_ratio = models.FloatField(null=False, blank=False, db_column="POST_UPVOTE_SCORE")
     post_url = models.URLField(null=True, blank=True, db_column="POST_URL")
-    created_at = models.DateField(null=False, blank=False, db_column="POST_CREATED_DATE", auto_now=True)
+    created_at = models.DateField(null=False, blank=False, db_column="POST_CREATED_DATE", auto_now_add=True)
     
     class Meta:
         pass
