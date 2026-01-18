@@ -15,6 +15,19 @@ class Command(BaseCommand):
             "status_code": response_obj.status_code,
             "res": response_obj.json()
         }
+        
+    def insert_reddit_post_data(self, data):
+        try:
+            raw_data = data['data']
+            post_data = []
+            
+            if raw_data:
+                for obj in raw_data:
+                    pass
+                    
+        except Exception as ex:
+            # IMPLEMENT LOGGING HERE
+            pass
     
     def handle(self, *args, **kwargs):
         try:
