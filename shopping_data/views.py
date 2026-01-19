@@ -223,7 +223,7 @@ class CategoryView(APIView):
                 "msg": str(ex)
             }, status=500)
             
-    def post(self, request, category_id):
+    def post(self, request, category_id=None):
         try:
             if not request.data:
                 return Response({
@@ -338,7 +338,7 @@ class ProductView(APIView):
     authentication_classes = []
     permission_classes = []
     
-    def get(self, request, product_id):
+    def get(self, request, product_id=None):
         try:
             if not product_id:
                 product_qs = Products.objects.filter(is_active=True, is_deleted=False)
@@ -376,8 +376,8 @@ class ProductView(APIView):
                 "status": "error",
                 "msg": str(ex)
             }, status=400)
-            
-    def post(self, request, product_id):
+
+    def post(self, request, product_id=None):
         try:
             if not request.data or not isinstance(request.data, dict):
                 return Response({
@@ -400,6 +400,79 @@ class ProductView(APIView):
                 "msg": product_deserialized.error_messages
             }, status=400)
                 
+        except Exception as ex:
+            return Response({
+                "status": "error",
+                "msg": str(ex)
+            }, status=400)
+        
+    def patch(self, request, product_id):
+        try:
+            if not request.data or not isinstance(request.data, dict):
+                return Response({
+                    "status": "error",
+                    "msg": "Bad/Malformed Request Payload"
+                }, status=400)
+                
+            product_obj = Products.objects.get(id=product_id, is_active=True, is_deleted=False)
+            product_deserialized = ProductsPostSerializer(product_obj, request.data, partial=True)
+            
+            if product_deserialized.is_valid():
+                product_updated_obj = product_deserialized.save()
+                
+                return Response({
+                    "status": "success",
+                    "msg": f"Product Updated with Product ID {product_updated_obj.id}"
+                }, status=200)
+                
+            return Response({
+                "status": "error",
+                "msg": f"Unable to Update Product with ID {product_id}"
+            }, status=400)
+        
+        except Products.DoesNotExist as ex:
+            return Response({
+                "status": "error",
+                "msg": f"Product with Product ID {product_id} does not exists."
+            }, status=400)
+            
+        except Products.MultipleObjectsReturned as ex:
+            return Response({
+                "status": "error",
+                "msg": f"Multiple Product Objects found with Product ID {product_id}"
+            }, status=400)
+        
+        except Exception as ex:
+            # IMPLEMENT LOGGING HERE
+            return Response({
+                "status": "error",
+                "msg": str(ex)
+            }, status=400)
+            
+    def delete(self, request, product_id):
+        try:
+            product_obj = Products.objects.get(id=product_id, is_active=True, is_deleted=False)
+            product_obj.is_active=False
+            product_obj.is_deleted=True
+            product_obj.save()
+            
+            return Response({
+                "status": "success",
+                "msg": f"Product with Product ID {product_id} successfully deleted."
+            }, status=200)
+            
+        except Products.DoesNotExist as ex:
+            return Response({
+                "status": "error",
+                "msg": f"Product object does not exists with Product ID {product_id}"
+            }, status=400)
+            
+        except Products.MultipleObjectsReturned as ex:
+            return Response({
+                "status": "error",
+                "msg": f"Multiple Products returned with Product ID {product_id}"
+            }, status=400)
+        
         except Exception as ex:
             return Response({
                 "status": "error",
