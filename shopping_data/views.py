@@ -8,6 +8,7 @@ from .models.Brand import Brand
 from .models.Category import Category
 from .models.Products import Products
 from .serializers import BrandSerializer, CategorySerializer, ProductsViewSerializer, ProductsPostSerializer
+from rest_framework.parsers import MultiPartParser, FormParser
 
 # Create your views here.
 
@@ -337,6 +338,7 @@ class CategoryView(APIView):
 class ProductView(APIView):
     authentication_classes = []
     permission_classes = []
+    parser_classes = [MultiPartParser, FormParser]
     
     def get(self, request, product_id=None):
         try:

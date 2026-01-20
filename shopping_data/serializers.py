@@ -49,6 +49,12 @@ class ProductsPostSerializer(serializers.ModelSerializer):
     description = serializers.CharField()
     price = serializers.IntegerField()
     color = serializers.CharField()
+    brand = serializers.PrimaryKeyRelatedField(
+        queryset = Brand.objects.all()
+    )
+    category = serializers.PrimaryKeyRelatedField(
+        queryset = Category.objects.all()
+    )
     product_image = serializers.ImageField(required=True, allow_null=False)
     is_active = serializers.BooleanField()
     is_deleted = serializers.BooleanField()
