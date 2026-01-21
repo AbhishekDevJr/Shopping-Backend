@@ -9,6 +9,7 @@ from .models.Category import Category
 from .models.Products import Products
 from .serializers import BrandSerializer, CategorySerializer, ProductsViewSerializer, ProductsPostSerializer
 from rest_framework.parsers import MultiPartParser, FormParser
+from shopping_data.models.Cart import Cart
 
 # Create your views here.
 
@@ -56,7 +57,7 @@ class BrandView(APIView):
                 "msg": str(ex)
             }, status=500)
 
-    def post(self, request, category_id):
+    def post(self, request, category_id=None):
         try:
             brand_data = request.data
             
@@ -333,8 +334,8 @@ class CategoryView(APIView):
                 "status": "error",
                 "msg": str(ex)
             }, status=500)
-            
-            
+
+
 class ProductView(APIView):
     authentication_classes = []
     permission_classes = []
@@ -408,7 +409,7 @@ class ProductView(APIView):
                 "msg": str(ex)
             }, status=400)
         
-    def patch(self, request, product_id):
+    def patch(self, request, product_id=None):
         try:
             if not request.data or not isinstance(request.data, dict):
                 return Response({
@@ -451,7 +452,7 @@ class ProductView(APIView):
                 "msg": str(ex)
             }, status=400)
             
-    def delete(self, request, product_id):
+    def delete(self, request, product_id=None):
         try:
             product_obj = Products.objects.get(id=product_id, is_active=True, is_deleted=False)
             product_obj.is_active=False
@@ -474,6 +475,27 @@ class ProductView(APIView):
                 "status": "error",
                 "msg": f"Multiple Products returned with Product ID {product_id}"
             }, status=400)
+        
+        except Exception as ex:
+            return Response({
+                "status": "error",
+                "msg": str(ex)
+            }, status=400)
+            
+class CartView(APIView):
+    authentication_classes = []
+    permission_classes = []
+    parser_classes = [MultiPartParser, FormParser]
+    
+    def get(self, request, cart_id=None):
+        try:
+            if not cart_id:
+                return Response({
+                    "status": "error",
+                    "msg": "Cart ID is required to get User Cart Details."
+                }, status=400)
+                
+            
         
         except Exception as ex:
             return Response({
