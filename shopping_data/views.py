@@ -7,7 +7,7 @@ from rest_framework.serializers import Serializer
 from .models.Brand import Brand
 from .models.Category import Category
 from .models.Products import Products
-from .serializers import BrandSerializer, CategorySerializer, ProductsViewSerializer, ProductsPostSerializer
+from .serializers import BrandSerializer, CategorySerializer, ProductsViewSerializer, ProductsPostSerializer, CartGetSerializer
 from rest_framework.parsers import MultiPartParser, FormParser
 from shopping_data.models.Cart import Cart
 
@@ -495,7 +495,26 @@ class CartView(APIView):
                     "msg": "Cart ID is required to get User Cart Details."
                 }, status=400)
                 
+            cart_obj = Cart.objects.get(is_cart_active=True, user=request.user)
+            cart_serialized = CartGetSerializer(cart_obj, many=False)
             
+            return Response({
+                "status": "success",
+                "msg": f"Cart Details Successfully Retrieved for Cart ID {cart_id}",
+                "data": cart_serialized.data
+            }, status=200)
+            
+        except Cart.DoesNotExist as ex:
+            return Response({
+                "status": "error",
+                "msg": str(ex)
+            }, status=400)
+            
+        except Cart.MultipleObjectsReturned as ex:
+            return Response({
+                "status": "error",
+                "msg": str(ex)
+            }, status=400)
         
         except Exception as ex:
             return Response({

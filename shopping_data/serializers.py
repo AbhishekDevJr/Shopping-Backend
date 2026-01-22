@@ -85,3 +85,26 @@ class ProductsPostSerializer(serializers.ModelSerializer):
             is_active=is_active,
             is_deleted=is_deleted
         )
+        
+class CartGetSerializer(serializers.ModelSerializer):
+    user = serializers.SerializerMethodField(read_only=True)
+    total_quantity = serializers.IntegerField(read_only=True)
+    total_value = serializers.DecimalField(read_only=True, decimal_places=2, max_digits=10)
+    created_date = serializers.DateField(read_only=True)
+    items = serializers.SerializerMethodField(read_only=True)
+    
+    def get_user(self, instance):
+        return instance.user.username if instance.user else "N/A"
+    
+    def get_items(self, instance):
+        cart_items = instance.cart_items.all()
+        cart_details = []
+        
+        for item in cart_items:
+            cart_details.append({
+                "product_name": item.product.name if item.product else "N/A",
+                "product_quantity": item.product_quantity,
+                "product_total_value": item.total_value
+            })
+        
+        return cart_details
