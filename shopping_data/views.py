@@ -521,3 +521,13 @@ class CartView(APIView):
                 "status": "error",
                 "msg": str(ex)
             }, status=400)
+            
+    def post(self, request, cart_id=None):
+        try:
+            pass
+        
+        except Exception as ex:
+            return Response({
+                "status": "error",
+                "msg": str(ex)
+            }, status=400)
