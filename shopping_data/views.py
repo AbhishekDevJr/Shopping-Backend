@@ -7,9 +7,11 @@ from rest_framework.serializers import Serializer
 from .models.Brand import Brand
 from .models.Category import Category
 from .models.Products import Products
-from .serializers import BrandSerializer, CategorySerializer, ProductsViewSerializer, ProductsPostSerializer, CartGetSerializer
+from .serializers import BrandSerializer, CategorySerializer, ProductsViewSerializer, ProductsPostSerializer, CartGetSerializer, CartPostSerializer, CartItemPostSerializer
 from rest_framework.parsers import MultiPartParser, FormParser
 from shopping_data.models.Cart import Cart
+from django.db import transaction
+from django.core.exceptions import ValidationError
 
 # Create your views here.
 
@@ -524,6 +526,63 @@ class CartView(APIView):
             
     def post(self, request, cart_id=None):
         try:
+            with transaction.atomic():
+                active_cart = Cart.objects.get(user=request.user , is_cart_active=True)
+                
+                if active_cart:
+                    return Response({
+                        "status": "error",
+                        "msg": f"Please complete Checkout Flow for Older Cart 1st. CartID {active_cart.pk}"
+                    }, status=400)
+                    
+                new_cart_data = {
+                    "user": request.user,
+                    "cart_quantity": 0,
+                    "cart_value": 0.00,
+                    "is_cart_active": True
+                }
+                
+                cart_obj_deserialized = CartPostSerializer(data=new_cart_data, many=False)
+                
+                if cart_obj_deserialized.is_valid():
+                    new_cart_obj = cart_obj_deserialized.save()
+                    
+                    cart_items_data = request.data["cart_items"]
+                    
+                    if not cart_items_data or not isinstance(cart_items_data, list):
+                        raise KeyError
+                    
+                    cart_items_to_store = []
+                    
+                    for cart_item in cart_items_data:
+                        cart_items_to_store.append({
+                            "cart": new_cart_obj.pk,
+                            "product": cart_item["product_id"],
+                            "product_quantity": cart_item["product_quantity"]
+                        })
+                        
+                    cart_items_deserialized = CartItemPostSerializer(data=cart_items_to_store, many=True)
+                    
+                    if cart_items_deserialized.is_valid():
+                        new_cart_items_stored = cart_items_deserialized.save()
+                        
+                        return Response({
+                            "status": "success",
+                            "msg": f"Cart Successfully Created with CartID {new_cart_obj.pk}"
+                        }, status=201)
+                    else:
+                        raise ValidationError("Error Raised while storing Cart Items.")
+                        
+                else:
+                    raise ValidationError("Error occured while Creating Cart Record.")
+                    
+                
+        except Cart.DoesNotExist as ex:
+            # Handle Cart Initiation Logic Here
+            pass
+            
+        except Cart.MultipleObjectsReturned as ex:
+            # Handle Multiple Active Cart Per User Logic Here
             pass
         
         except Exception as ex:

@@ -2,6 +2,9 @@ from rest_framework import serializers
 from .models.Brand import Brand
 from .models.Category import Category
 from .models.Products import Products
+from shopping_data.models.Cart import Cart
+from shopping_data.models.CartItem import CartItem
+from users.models.CustomUser import CustomUser
 
 class BrandSerializer(serializers.ModelSerializer):
     class Meta:
@@ -91,20 +94,46 @@ class CartGetSerializer(serializers.ModelSerializer):
     total_quantity = serializers.IntegerField(read_only=True)
     total_value = serializers.DecimalField(read_only=True, decimal_places=2, max_digits=10)
     created_date = serializers.DateField(read_only=True)
-    items = serializers.SerializerMethodField(read_only=True)
     
     def get_user(self, instance):
         return instance.user.username if instance.user else "N/A"
     
-    def get_items(self, instance):
-        cart_items = instance.cart_items.all()
-        cart_details = []
+    class Meta:
+        model = Cart
+        fields = ['user', 'total_quantity', 'total_value', 'created_date']
         
-        for item in cart_items:
-            cart_details.append({
-                "product_name": item.product.name if item.product else "N/A",
-                "product_quantity": item.product_quantity,
-                "product_total_value": item.total_value
-            })
+class CartPostSerializer(serializers.ModelSerializer):
+    user = serializers.PrimaryKeyRelatedField(
+        queryset = CustomUser.objects.all()
+    )
+    cart_quantity = serializers.IntegerField()
+    cart_value = serializers.DecimalField(decimal_places=2, max_digits=10)
+    is_cart_active = serializers.BooleanField()
+    
+    class Meta:
+        model = Cart
+        fields = ['user', 'cart_quantity', 'cart_value', 'is_cart_active']
+
+
+class CartItemPostSerializer(serializers.ModelSerializer):
+    cart = serializers.PrimaryKeyRelatedField(
+        queryset = Cart.objects.all()
+    )
+    product = serializers.PrimaryKeyRelatedField(
+        queryset = Products.objects.all()
+    )
+    product_quantity = serializers.IntegerField()
+    total_value = serializers.DecimalField(max_digits=10, decimal_places=2)
+    
+    def create(self, validated_data):
+        cart = validated_data["cart"]
+        product = validated_data["product"]
+        product_quantity = validated_data["product_quantity"]
+        total_value = validated_data["product_quantity"] * validated_data["product"].price
         
-        return cart_details
+        return super().create(validated_data)
+    
+    class Meta:
+        model = CartItem
+        fields = ['cart', 'product', 'product_quantity', 'total_value']
+    
