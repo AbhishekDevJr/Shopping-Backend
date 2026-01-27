@@ -1,0 +1,1 @@
+This repository holds the codebase for Shopping Backend Project
